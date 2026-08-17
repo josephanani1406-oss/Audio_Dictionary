@@ -9,6 +9,43 @@ from urllib.request import Request, urlopen
 from controller import DictionaryController
 from history import HistoryManager
 from speech import SpeechEngine
+from settings import SettingsManager
+from settings_window import SettingsWindow
+
+
+class Tooltip:
+    def __init__(self, widget, text):
+        self.widget = widget
+        self.text = text
+        self.tooltip = None
+        self.widget.bind("<Enter>", self.on_enter)
+        self.widget.bind("<Leave>", self.on_leave)
+
+    def on_enter(self, event):
+        x = event.widget.winfo_rootx() + event.widget.winfo_width() // 2
+        y = event.widget.winfo_rooty() + event.widget.winfo_height() + 5
+        
+        self.tooltip = tk.Toplevel(event.widget)
+        self.tooltip.wm_overrideredirect(True)
+        self.tooltip.wm_geometry(f"+{x}+{y}")
+        
+        label = tk.Label(
+            self.tooltip,
+            text=self.text,
+            bg="#FFE6CC",
+            fg="#333",
+            font=("Arial", 9),
+            padx=5,
+            pady=3,
+            relief="solid",
+            bd=1
+        )
+        label.pack()
+
+    def on_leave(self, event):
+        if self.tooltip:
+            self.tooltip.destroy()
+            self.tooltip = None
 
 
 class AudioDictionaryGUI:
@@ -16,7 +53,9 @@ class AudioDictionaryGUI:
     def __init__(self):
         self.root = tk.Tk()
 
-
+        # Initialize settings manager first
+        self.settings_manager = SettingsManager()
+        
         icon_path = os.path.join(
             os.path.dirname(__file__),
             "audio_dictionary_icon.ico"
@@ -39,8 +78,14 @@ class AudioDictionaryGUI:
         self.controller = DictionaryController()
         self.history_manager = HistoryManager()
         self.speech_engine = SpeechEngine()
+        
+        # Load saved voice preference
+        saved_voice = self.settings_manager.get("voice", "female")
+        self.speech_engine.set_voice(saved_voice)
 
         self.current_theme = "light"
+        self.dark_mode = self.settings_manager.get("dark_mode", False)
+        self.settings_window = None
         self.current_language = "en"
         self.language_label = "English"
 
@@ -128,11 +173,11 @@ class AudioDictionaryGUI:
         # Search button
         self.search_btn = tk.Button(
             search_frame,
-            text="Search",
-            width=12,
+            text="🔍",
+            width=3,
             bg="#1E4A73",
             fg="white",
-            font=("Arial", 11),
+            font=("Arial", 16),
             bd=0,
             relief="flat",
             highlightbackground="#5B5B5B",
@@ -149,6 +194,8 @@ class AudioDictionaryGUI:
             side="left",
             padx=(10, 0)
         )
+        
+        Tooltip(self.search_btn, "Search")
 
         self.sidebar = tk.Frame(
             self.root,
@@ -161,11 +208,11 @@ class AudioDictionaryGUI:
 
         self.history_button = tk.Button(
             self.sidebar,
-            text="History",
-            width=14,
+            text="📜",
+            width=3,
             bg="#8BB9D0",
             fg="#123B4A",
-            font=("Arial", 10, "bold"),
+            font=("Arial", 12),
             bd=0,
             relief="flat",
             cursor="hand2",
@@ -177,14 +224,16 @@ class AudioDictionaryGUI:
             column=0,
             padx=8
         )
+        
+        Tooltip(self.history_button, "History")
 
         self.favorites_panel_button = tk.Button(
             self.sidebar,
-            text="Favorites",
-            width=14,
+            text="⭐",
+            width=3,
             bg="#8BB9D0",
             fg="#123B4A",
-            font=("Arial", 10, "bold"),
+            font=("Arial", 12),
             bd=0,
             relief="flat",
             cursor="hand2",
@@ -196,6 +245,30 @@ class AudioDictionaryGUI:
             column=1,
             padx=8
         )
+        
+        Tooltip(self.favorites_panel_button, "Favorites")
+
+        # Settings button
+        self.settings_button = tk.Button(
+            self.sidebar,
+            text="⚙️",
+            width=3,
+            bg="#8BB9D0",
+            fg="#123B4A",
+            font=("Arial", 12),
+            bd=0,
+            relief="flat",
+            cursor="hand2",
+            command=self.open_settings
+        )
+
+        self.settings_button.grid(
+            row=0,
+            column=2,
+            padx=8
+        )
+        
+        Tooltip(self.settings_button, "Settings")
 
         result_frame = tk.Frame(
             self.root,
@@ -338,11 +411,10 @@ class AudioDictionaryGUI:
         # Pronounce
         self.speak_button = tk.Button(
             button_frame,
-            text="Pronounce",
-            width=12,
+            text="🔊",
+            font=("Arial", 14),
             bg="#2E6B43",
             fg="white",
-            font=("Arial", 10),
             bd=0,
             relief="flat",
             activebackground="#224F34",
@@ -359,15 +431,16 @@ class AudioDictionaryGUI:
             padx=4,
             pady=4
         )
+        
+        Tooltip(self.speak_button, "Pronounce")
 
         # Read
         self.read_button = tk.Button(
             button_frame,
-            text="Read",
-            width=12,
+            text="📖",
+            font=("Arial", 14),
             bg="#8A5A1E",
             fg="white",
-            font=("Arial", 10),
             bd=0,
             relief="flat",
             activebackground="#6D4518",
@@ -384,15 +457,16 @@ class AudioDictionaryGUI:
             padx=4,
             pady=4
         )
+        
+        Tooltip(self.read_button, "Read")
 
         # Favorite
         self.favorite_button = tk.Button(
             button_frame,
-            text="Favorite",
-            width=12,
+            text="❤️",
+            font=("Arial", 14),
             bg="#4F3C74",
             fg="white",
-            font=("Arial", 10),
             bd=0,
             relief="flat",
             activebackground="#3D2D5A",
@@ -409,15 +483,16 @@ class AudioDictionaryGUI:
             padx=4,
             pady=4
         )
+        
+        Tooltip(self.favorite_button, "Favorite")
 
         # Clear
         self.clear_button = tk.Button(
             button_frame,
-            text="Clear",
-            width=12,
+            text="🗑️",
+            font=("Arial", 14),
             bg="#7A2E3B",
             fg="white",
-            font=("Arial", 10),
             bd=0,
             relief="flat",
             activebackground="#5D1F2B",
@@ -434,6 +509,8 @@ class AudioDictionaryGUI:
             padx=4,
             pady=4
         )
+        
+        Tooltip(self.clear_button, "Clear")
 
         self.status = tk.Label(
             self.root,
@@ -1438,6 +1515,22 @@ class AudioDictionaryGUI:
         event
     ):
         return
+
+    def open_settings(self):
+        """Open the settings window"""
+        self.settings_window = SettingsWindow(
+            self.root,
+            self.settings_manager,
+            self.speech_engine,
+            apply_callback=self.apply_settings
+        )
+        self.settings_window.open()
+
+    def apply_settings(self, settings):
+        """Apply settings changes to the application"""
+        # Settings are automatically saved by SettingsManager
+        # Apply any UI changes needed based on dark_mode
+        pass
 
     def run(self):
 
