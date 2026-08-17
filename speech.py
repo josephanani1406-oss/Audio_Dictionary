@@ -1,7 +1,6 @@
 import subprocess
 import sys
 
-
 class SpeechEngine:
     def __init__(self):
         self.available = sys.platform.startswith("win")

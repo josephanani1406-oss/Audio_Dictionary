@@ -48,6 +48,7 @@ class DictionaryEngine:
                 }
 
             payload = response.json()
+            # print(payload)
             if not isinstance(payload, list) or not payload:
                 return {
                     "success": False,
@@ -55,6 +56,7 @@ class DictionaryEngine:
                 }
 
             data = payload[0]
+            # print(data)
             if not isinstance(data, dict):
                 return {
                     "success": False,
