@@ -1,11 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+from PyInstaller.utils.hooks import collect_data_files
+
 
 a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('assets', 'assets')],
+    datas=[('assets', 'assets')] + collect_data_files('spellchecker'),
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

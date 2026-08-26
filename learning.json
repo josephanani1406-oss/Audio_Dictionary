@@ -1,0 +1,20 @@
+{
+    "words": {
+        "innovative": {
+            "word": "innovative",
+            "note": "i am innovative if i come up with fresh ideas",
+            "learned": true,
+            "review_later": true
+        },
+        "deep": {
+            "word": "deep",
+            "note": "shsjc",
+            "learned": true,
+            "review_later": false,
+            "learned_date": "2026-08-21"
+        }
+    },
+    "activity_dates": [
+        "2026-08-21"
+    ]
+}

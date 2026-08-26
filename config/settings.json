@@ -1,6 +1,6 @@
 {
-  "voice": "male",
-  "dark_mode": true,
-  "window_geometry": "900x700",
-  "language": "en"
+    "voice": "female",
+    "dark_mode": false,
+    "window_geometry": "1536x793+-48+112",
+    "language": "en"
 }

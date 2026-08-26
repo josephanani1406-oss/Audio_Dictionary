@@ -1,5 +1,0 @@
-recursive-include assets *
-recursive-include docs *
-include requirements.txt
-include .env.example
-include LICENSE
